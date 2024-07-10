@@ -7,7 +7,10 @@ DISCONNECT_MESSAGE = "!DISCONNECT"
 SERVER = socket.gethostname()  # as both code is running on same pc
 ADDR = (SERVER, PORT)
 
+# Create a server sie socket using IPv4 (AF_INET) and TCP protocol (SOCK_STREAM)
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+print(socket.gethostname()) # Get host name (device)
+print(socket.gethostbyname(socket.gethostname())) # Get ID address of host
 client.connect(ADDR)
 
 def send(msg):
@@ -21,8 +24,9 @@ def send(msg):
 
 while True:
     msg=input("->")
-    send(msg)
+    
     if(msg=="disconnect"):
         break
-
+    send(msg)
+    
 send(DISCONNECT_MESSAGE)
