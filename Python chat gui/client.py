@@ -47,8 +47,11 @@ class GUI:
         self.full_name = full_name
         self.chat_transcript_area = None
         self.enter_text_widget = None
+        self.chat_log_file = open("chat_log.txt", "a+")  # Mở tệp để đọc và ghi
+        self.chat_log_file.seek(0)  # Di chuyển con trỏ tệp về đầu
         self.initialize_socket()
         self.initialize_gui()
+        self.load_chat_history()  # Tải lịch sử đoạn chat
         self.listen_for_incoming_messages_in_a_thread()
 
     def initialize_socket(self):
@@ -63,6 +66,7 @@ class GUI:
         self.display_chat_box()
         self.display_chat_entry_box()
         self.display_client_count()
+        self.display_delete_button()  # Thêm nút xóa tin nhắn
 
     def listen_for_incoming_messages_in_a_thread(self):
         thread = threading.Thread(target=self.receive_message_from_server, args=(self.client_socket,))
@@ -83,8 +87,10 @@ class GUI:
                 message = user + " has joined"
                 self.chat_transcript_area.insert('end', message + '\n')
                 self.chat_transcript_area.yview(END)
+                self.chat_log_file.write(message + '\n')  # Ghi tin nhắn vào tệp
             else:
                 self.display_message_with_timestamp(message)
+                self.chat_log_file.write(message + '\n')  # Ghi tin nhắn vào tệp
 
         so.close()
 
@@ -93,6 +99,7 @@ class GUI:
         message_with_timestamp = f"[{timestamp}] {message}"
         self.chat_transcript_area.insert('end', message_with_timestamp + '\n')
         self.chat_transcript_area.yview(END)
+        self.chat_log_file.write(message_with_timestamp + '\n')  # Ghi tin nhắn vào tệp
 
     def display_chat_box(self):
         frame = Frame(self.root)
@@ -117,6 +124,13 @@ class GUI:
         send_button = Button(frame, text="Send", width=10, command=self.send_chat)
         send_button.pack(side='left', padx=10)
 
+    def display_delete_button(self):
+        frame = Frame(self.root)
+        frame.pack(pady=10)
+        
+        delete_button = Button(frame, text="Delete Messages", width=20, command=self.delete_messages)
+        delete_button.pack(pady=10)
+
     def display_client_count(self):
         frame = Frame(self.root)
         frame.pack(pady=10)
@@ -137,7 +151,21 @@ class GUI:
             message = (self.full_name + ": " + data).encode('utf-8')
             self.client_socket.send(message)
             self.display_message_with_timestamp(data)  # Hiển thị tin nhắn ngay khi gửi
+            self.chat_log_file.write(f"[{datetime.now().strftime('%H:%M:%S')}] {self.full_name}: {data}\n")  # Ghi tin nhắn vào tệp
             self.enter_text_widget.delete(1.0, 'end')
+
+    def load_chat_history(self):
+        for line in self.chat_log_file:
+            self.chat_transcript_area.insert(END, line)
+        self.chat_transcript_area.yview(END)
+
+    def delete_messages(self):
+        self.chat_transcript_area.delete(1.0, END)  # Xóa toàn bộ nội dung trong Text widget
+        self.chat_log_file.close()  # Đóng tệp hiện tại
+        self.chat_log_file = open("chat_log.txt", "w")  # Mở tệp ở chế độ ghi để xóa toàn bộ nội dung tệp
+        self.chat_log_file.close()
+        self.chat_log_file = open("chat_log.txt", "a+")  # Mở lại tệp ở chế độ thêm/đọc
+        self.chat_log_file.seek(0)
 
     def on_close_window(self):
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
@@ -148,6 +176,7 @@ class GUI:
                     print(f"Error sending leave message: {e}")
                 finally:
                     self.client_socket.close()
+        self.chat_log_file.close()  # Đóng tệp khi đóng ứng dụng
         self.root.destroy()
         exit(0)
 
