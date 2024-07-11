@@ -1,6 +1,6 @@
-from tkinter import Tk, Frame, Scrollbar, Label, END, Entry, Text, VERTICAL, Button, messagebox
 import socket
 import threading
+from tkinter import Tk, Frame, Scrollbar, Label, END, Entry, Text, VERTICAL, Button, messagebox
 from datetime import datetime  # Import datetime module for timestamp
 
 class LoginGUI:
@@ -13,10 +13,15 @@ class LoginGUI:
     def initialize_login_gui(self):
         frame = Frame(self.root)
         frame.pack(pady=20)
-
+        frame_2 = Frame(self.root)
+        frame_2.pack(pady=20)
         Label(frame, text='Enter your full name:', font=("Helvetica", 16)).pack(side='left', padx=10)
         self.name_entry = Entry(frame, width=50, borderwidth=2)
         self.name_entry.pack(side='left', padx=10)
+
+        Label(frame_2, text='Select room:', font=("Helvetica", 16)).pack(side='left', padx=10)
+        self.room_entry = Entry(frame_2, width=20, borderwidth=2)
+        self.room_entry.pack(side='left', padx=10)
 
         join_button = Button(frame, text="Join", width=10, command=self.on_join)
         join_button.pack(side='left', padx=10)
@@ -35,6 +40,7 @@ class LoginGUI:
 class GUI:
     client_socket = None
     last_received_message = None
+    client_count_label = None
     
     def __init__(self, master, full_name):
         self.root = master
@@ -56,6 +62,7 @@ class GUI:
         self.root.resizable(0, 0)
         self.display_chat_box()
         self.display_chat_entry_box()
+        self.display_client_count()
 
     def listen_for_incoming_messages_in_a_thread(self):
         thread = threading.Thread(target=self.receive_message_from_server, args=(self.client_socket,))
@@ -69,7 +76,9 @@ class GUI:
             message = buffer.decode('utf-8')
             print(message)
 
-            if "joined" in message:
+            if message.startswith("count:"):
+                self.update_client_count(message.split(":")[1])
+            elif "joined" in message:
                 user = message.split(":")[1]
                 message = user + " has joined"
                 self.chat_transcript_area.insert('end', message + '\n')
@@ -108,6 +117,17 @@ class GUI:
         send_button = Button(frame, text="Send", width=10, command=self.send_chat)
         send_button.pack(side='left', padx=10)
 
+    def display_client_count(self):
+        frame = Frame(self.root)
+        frame.pack(pady=10)
+        
+        Label(frame, text='Number of clients:', font=("Helvetica", 14)).pack(side='left', padx=10)
+        self.client_count_label = Label(frame, text='0', font=("Helvetica", 14))
+        self.client_count_label.pack(side='left', padx=10)
+
+    def update_client_count(self, count):
+        self.client_count_label.config(text=count)
+
     def on_enter_key_pressed(self, event):
         self.send_chat()
 
@@ -115,7 +135,7 @@ class GUI:
         data = self.enter_text_widget.get(1.0, 'end').strip()
         if data:
             message = (self.full_name + ": " + data).encode('utf-8')
-            self.display_message_with_timestamp(message.decode('utf-8'))
+            # Send message to server
             self.client_socket.send(message)
             self.enter_text_widget.delete(1.0, 'end')
 
@@ -123,6 +143,7 @@ class GUI:
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
             if self.client_socket:
                 try:
+                    # Send leave message to server
                     self.client_socket.send(("left:" + self.full_name).encode('utf-8'))
                 except Exception as e:
                     print(f"Error sending leave message: {e}")

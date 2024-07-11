@@ -4,6 +4,8 @@ import threading
 
 class ChatServer:
     clients_list = []
+    client_count = 0
+    previous_client_count = 0  # Biến lưu trữ số lượng client trước khi có thay đổi
 
     last_received_message = ""
 
@@ -54,6 +56,14 @@ class ChatServer:
                     socket.close()
                     self.remove_from_clients_list(socket)
 
+    def broadcast_client_count(self):
+        message = f"count:{self.client_count}"
+        for client_socket, _ in self.clients_list:
+            try:
+                client_socket.sendall(message.encode('utf-8'))
+            except:
+                self.remove_from_clients_list(client_socket)
+
     def receive_messages_in_a_new_thread(self):
         while True:
             client = so, (ip, port) = self.server_socket.accept()
@@ -66,12 +76,22 @@ class ChatServer:
     def add_to_clients_list(self, client):
         if client not in self.clients_list:
             self.clients_list.append(client)
-
+            self.previous_client_count = self.client_count  # Lưu số lượng client trước khi cập nhật
+            self.client_count = len(self.clients_list)
+            if self.client_count != self.previous_client_count:
+                self.broadcast_client_count()
+                print(self.client_count)
+                
     def remove_from_clients_list(self, client_socket):
         for client in self.clients_list:
             socket, (ip, port) = client
             if socket == client_socket:
                 self.clients_list.remove(client)
+                self.previous_client_count = self.client_count  # Lưu số lượng client trước khi cập nhật
+                self.client_count = len(self.clients_list)
+                if self.client_count != self.previous_client_count:
+                    self.broadcast_client_count()
+                    print(self.client_count)
                 break
 
 
