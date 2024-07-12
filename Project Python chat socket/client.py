@@ -45,6 +45,7 @@ class GUI:
     client_socket = None
     last_received_message = None
     client_count_label = None
+    last_displayed_date = None  # Variable to track last displayed date
     
     def __init__(self, master, full_name, room_name):
         self.root = master
@@ -102,7 +103,17 @@ class GUI:
         so.close()
 
     def display_message_with_timestamp(self, message):
-        timestamp = datetime.now().strftime('%H:%M:%S')  # Get current time in HH:MM:SS format
+        current_time = datetime.now()
+        timestamp = current_time.strftime('%H:%M:%S')  # Get current time in HH:MM:SS format
+        current_date = current_time.strftime('%Y-%m-%d')  # Get current date in YYYY-MM-DD format
+
+        # Check if the date has changed since the last message
+        if self.last_displayed_date != current_date:
+            self.last_displayed_date = current_date
+            date_message = f"----- {current_date} -----"
+            self.chat_transcript_area.insert('end', date_message + '\n')
+            self.chat_log_file.write(date_message + '\n')  # Write date message to file
+
         message_with_timestamp = f"[{timestamp}] {message}"
         self.chat_transcript_area.insert('end', message_with_timestamp + '\n')
         self.chat_transcript_area.yview(END)
@@ -167,8 +178,12 @@ class GUI:
             self.enter_text_widget.delete(1.0, 'end')
 
     def load_chat_history(self):
+        last_date = None
         for line in self.chat_log_file:
+            if line.startswith("-----"):
+                last_date = line.strip("----- \n")
             self.chat_transcript_area.insert(END, line)
+        self.last_displayed_date = last_date  # Set the last displayed date to the last date in the log file
         self.chat_transcript_area.yview(END)
 
     def delete_messages(self):
