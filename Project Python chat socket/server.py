@@ -17,7 +17,7 @@ class ChatServer:
         # this makes the server listen to requests coming from other computers on the network
         self.server_socket.bind((local_ip, local_port))
         print("Listening for incoming messages..")
-        self.server_socket.listen(10)  # listen for incoming connections / max 10 clients
+        self.server_socket.listen(10)  # listen for incoming connections / max 5 clients
         self.receive_connections_in_a_new_thread()
 
     def receive_messages(self, client_socket, room_name):

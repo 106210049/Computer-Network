@@ -1,7 +1,7 @@
 import socket
 import threading
 from tkinter import Tk, Frame, Scrollbar, Label, END, Entry, Text, VERTICAL, Button, messagebox
-from datetime import datetime  # Import datetime module for timestamp
+from datetime import datetime
 
 class LoginGUI:
     def __init__(self, master):
@@ -35,7 +35,7 @@ class LoginGUI:
         if len(room_name) == 0:
             messagebox.showerror("Select room", "Please enter a room name.")
             return
-        self.root.destroy()  # Close the login window
+        self.root.destroy()
         chat_window = Tk()
         chat_gui = GUI(chat_window, full_name, room_name)
         chat_window.protocol("WM_DELETE_WINDOW", chat_gui.on_close_window)
@@ -45,7 +45,7 @@ class GUI:
     client_socket = None
     last_received_message = None
     client_count_label = None
-    last_displayed_date = None  # Variable to track last displayed date
+    last_displayed_date = None
     
     def __init__(self, master, full_name, room_name):
         self.root = master
@@ -53,11 +53,11 @@ class GUI:
         self.room_name = room_name
         self.chat_transcript_area = None
         self.enter_text_widget = None
-        self.chat_log_file = open(f"{room_name}_chat_log.txt", "a+")  # Open file for reading and writing
-        self.chat_log_file.seek(0)  # Move file pointer to the start
+        self.chat_log_file = open(f"{room_name}_chat_log.txt", "a+")
+        self.chat_log_file.seek(0)
         self.initialize_socket()
         self.initialize_gui()
-        self.load_chat_history()  # Load chat history
+        self.load_chat_history()
         self.listen_for_incoming_messages_in_a_thread()
 
     def initialize_socket(self):
@@ -65,7 +65,7 @@ class GUI:
         remote_ip = '127.0.0.1'
         remote_port = 10319
         self.client_socket.connect((remote_ip, remote_port))
-        self.client_socket.send(self.room_name.encode('utf-8'))  # Send the room name to the server
+        self.client_socket.send(self.room_name.encode('utf-8'))
 
     def initialize_gui(self):
         self.root.title(f"Socket Chat - {self.room_name}")
@@ -74,7 +74,7 @@ class GUI:
         self.display_chat_box()
         self.display_chat_entry_box()
         self.display_client_count()
-        self.display_delete_button()  # Add delete message button
+        self.display_delete_button()
 
     def listen_for_incoming_messages_in_a_thread(self):
         thread = threading.Thread(target=self.receive_message_from_server, args=(self.client_socket,))
@@ -93,31 +93,29 @@ class GUI:
             elif "joined" in message:
                 user = message.split(":")[1]
                 message = user + " has joined"
-                self.chat_transcript_area.insert('end', message + '\n')
-                self.chat_transcript_area.yview(END)
-                self.chat_log_file.write(message + '\n')  # Write message to file
+                self.display_message_with_timestamp(message, tag="join")
+                self.chat_log_file.write(message + '\n')
             else:
-                self.display_message_with_timestamp(message)
-                self.chat_log_file.write(message + '\n')  # Write message to file
+                self.display_message_with_timestamp(message, tag="message")
+                self.chat_log_file.write(message + '\n')
 
         so.close()
 
-    def display_message_with_timestamp(self, message):
+    def display_message_with_timestamp(self, message, tag="message"):
         current_time = datetime.now()
-        timestamp = current_time.strftime('%H:%M:%S')  # Get current time in HH:MM:SS format
-        current_date = current_time.strftime('%Y-%m-%d')  # Get current date in YYYY-MM-DD format
+        timestamp = current_time.strftime('%H:%M:%S')
+        current_date = current_time.strftime('%Y-%m-%d')
 
-        # Check if the date has changed since the last message
         if self.last_displayed_date != current_date:
             self.last_displayed_date = current_date
             date_message = f"----- {current_date} -----"
-            self.chat_transcript_area.insert('end', date_message + '\n')
-            self.chat_log_file.write(date_message + '\n')  # Write date message to file
+            self.chat_transcript_area.insert('end', date_message + '\n', "date")
+            self.chat_log_file.write(date_message + '\n')
 
         message_with_timestamp = f"[{timestamp}] {message}"
-        self.chat_transcript_area.insert('end', message_with_timestamp + '\n')
+        self.chat_transcript_area.insert('end', message_with_timestamp + '\n', tag)
         self.chat_transcript_area.yview(END)
-        self.chat_log_file.write(message_with_timestamp + '\n')  # Write message to file
+        self.chat_log_file.write(message_with_timestamp + '\n')
 
     def display_room_name(self):
         frame = Frame(self.root)
@@ -135,6 +133,10 @@ class GUI:
         scrollbar = Scrollbar(frame, command=self.chat_transcript_area.yview, orient=VERTICAL)
         self.chat_transcript_area.config(yscrollcommand=scrollbar.set)
         scrollbar.pack(side='right', fill='y')
+
+        self.chat_transcript_area.tag_configure("join", foreground="blue")
+        self.chat_transcript_area.tag_configure("message", foreground="black")
+        self.chat_transcript_area.tag_configure("date", foreground="green")
 
     def display_chat_entry_box(self):
         frame = Frame(self.root)
@@ -174,7 +176,7 @@ class GUI:
         if data:
             message = (self.full_name + ": " + data).encode('utf-8')
             self.client_socket.send(message)
-            self.display_message_with_timestamp(self.full_name + ": " + data)  # Display message when sent
+            self.display_message_with_timestamp(self.full_name + ": " + data, tag="self")
             self.enter_text_widget.delete(1.0, 'end')
 
     def load_chat_history(self):
@@ -182,16 +184,18 @@ class GUI:
         for line in self.chat_log_file:
             if line.startswith("-----"):
                 last_date = line.strip("----- \n")
-            self.chat_transcript_area.insert(END, line)
-        self.last_displayed_date = last_date  # Set the last displayed date to the last date in the log file
+                self.chat_transcript_area.insert(END, line, "date")
+            else:
+                self.chat_transcript_area.insert(END, line, "message")
+        self.last_displayed_date = last_date
         self.chat_transcript_area.yview(END)
 
     def delete_messages(self):
-        self.chat_transcript_area.delete(1.0, END)  # Clear all content in Text widget
-        self.chat_log_file.close()  # Close current file
-        self.chat_log_file = open(f"{self.room_name}_chat_log.txt", "w")  # Open file in write mode to clear content
+        self.chat_transcript_area.delete(1.0, END)
         self.chat_log_file.close()
-        self.chat_log_file = open(f"{self.room_name}_chat_log.txt", "a+")  # Reopen file in append/read mode
+        self.chat_log_file = open(f"{self.room_name}_chat_log.txt", "w")
+        self.chat_log_file.close()
+        self.chat_log_file = open(f"{self.room_name}_chat_log.txt", "a+")
         self.chat_log_file.seek(0)
 
     def on_close_window(self):
@@ -203,7 +207,7 @@ class GUI:
                     print(f"Error sending leave message: {e}")
                 finally:
                     self.client_socket.close()
-        self.chat_log_file.close()  # Close file when closing the application
+        self.chat_log_file.close()
         self.root.destroy()
         exit(0)
 
