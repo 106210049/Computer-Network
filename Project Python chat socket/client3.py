@@ -69,6 +69,7 @@ class GUI:
     def initialize_gui(self):
         self.root.title(f"Socket Chat - {self.room_name}")
         self.root.resizable(0, 0)
+        self.display_room_name()
         self.display_chat_box()
         self.display_chat_entry_box()
         self.display_client_count()
@@ -106,6 +107,12 @@ class GUI:
         self.chat_transcript_area.insert('end', message_with_timestamp + '\n')
         self.chat_transcript_area.yview(END)
         self.chat_log_file.write(message_with_timestamp + '\n')  # Write message to file
+
+    def display_room_name(self):
+        frame = Frame(self.root)
+        frame.pack(pady=10)
+        
+        Label(frame, text=f"Room: {self.room_name}", font=("Helvetica", 16)).pack(side='top', pady=10)
 
     def display_chat_box(self):
         frame = Frame(self.root)
