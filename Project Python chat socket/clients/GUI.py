@@ -69,7 +69,7 @@ class GUI:
             logo_image_bk = logo_image_bk.resize((50, 50))
             logo_photo_bk = ImageTk.PhotoImage(logo_image_bk)
 
-            logo_label_bk = Label(self.root, image=logo_photo_bk, bg='#ADD8E6')
+            logo_label_bk = Label(self.root, image=logo_photo_bk)
             logo_label_bk.image = logo_photo_bk  # Keep a reference to the image to prevent garbage collection
             logo_label_bk.place(x=20, y=10)
 
@@ -78,7 +78,7 @@ class GUI:
             logo_image_123 = logo_image_123.resize((50, 50))
             logo_photo_123 = ImageTk.PhotoImage(logo_image_123)
 
-            logo_label_123 = Label(self.root, image=logo_photo_123, bg='#ADD8E6')
+            logo_label_123 = Label(self.root, image=logo_photo_123)
             logo_label_123.image = logo_photo_123  # Keep a reference to the image to prevent garbage collection
             logo_label_123.place(x=100, y=10)
 

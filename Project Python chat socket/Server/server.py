@@ -100,14 +100,21 @@ class ServerGUI:
     def __init__(self, master):
         self.root = master
         self.root.title("Chat Server")
+        self.root.geometry("600x400")
         self.root.resizable(0, 0)
         self.initialize_gui()
 
     def initialize_gui(self):
+        self.bg_image = Image.open("background2.png")
+        self.bg_image = self.bg_image.resize((600, 600))
+        self.bg_photo = ImageTk.PhotoImage(self.bg_image)
+
+        self.bg_label = Label(self.root, image=self.bg_photo)
+        self.bg_label.place(relwidth=1, relheight=1)
         frame = Frame(self.root)
         frame.pack(pady=20)
         self.root.iconbitmap('123.ico')
-        self.room_list = Text(frame, width=50, height=20, font=("Serif", 12))
+        self.room_list = Text(frame, width=60, height=10, font=("Serif", 12))
         self.room_list.pack(side='left', padx=10)
             
         scrollbar = Scrollbar(frame, command=self.room_list.yview, orient=VERTICAL)
@@ -120,6 +127,32 @@ class ServerGUI:
         self.clock_label = Label(self.root, text="", font=("Helvetica", 12))
         self.clock_label.pack(pady=10)
         self.update_clock()
+
+        self.display_logos()
+
+    def display_logos(self):
+        # Load and display the logos
+        try:
+            # Load and display bk.png on the left
+            logo_image_bk = Image.open("bk.png")
+            logo_image_bk = logo_image_bk.resize((70, 70))
+            logo_photo_bk = ImageTk.PhotoImage(logo_image_bk)
+
+            logo_label_bk = Label(self.root, image=logo_photo_bk)
+            logo_label_bk.image = logo_photo_bk  # Keep a reference to the image to prevent garbage collection
+            logo_label_bk.place(x=200, y=320)
+
+            # Load and display 123.ico on the right
+            logo_image_123 = Image.open("123.ico")
+            logo_image_123 = logo_image_123.resize((70, 70))
+            logo_photo_123 = ImageTk.PhotoImage(logo_image_123)
+
+            logo_label_123 = Label(self.root, image=logo_photo_123)
+            logo_label_123.image = logo_photo_123  # Keep a reference to the image to prevent garbage collection
+            logo_label_123.place(x=320, y=320)
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Unable to load logo image: {e}")
 
     def update_clock(self):
         now = datetime.now().strftime("%Y-%m-%d"+ " | " "%H:%M:%S")

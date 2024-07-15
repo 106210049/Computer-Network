@@ -21,6 +21,14 @@ class LoginGUI:
         self.initialize_login_gui()
 
     def initialize_login_gui(self):
+
+        self.bg_image = Image.open("background2.png")
+        self.bg_image = self.bg_image.resize((800, 800))
+        self.bg_photo = ImageTk.PhotoImage(self.bg_image)
+
+        self.bg_label = Label(self.root, image=self.bg_photo)
+        self.bg_label.place(relwidth=1, relheight=1)
+
         frame = Frame(self.root)
         frame.pack(pady=10)
 
@@ -36,22 +44,23 @@ class LoginGUI:
         frame_5 = Frame(self.root)
         frame_5.pack(pady=10)
 
-        Label(frame, text='Enter your full name:', font=("Helvetica", 14)).pack(side='left', padx=10)
+                
+        Label(frame, text='Enter your full name:', font=("Helvetica", 14), bg='#ADD8E6').pack(side='left', padx=10)
         self.name_entry = Entry(frame, width=60, borderwidth=2)
         self.name_entry.pack(side='left', padx=10)
 
-        Label(frame_3, text='Enter your password:', font=("Helvetica", 14)).pack(side='left', padx=10)
+        Label(frame_3, text='Enter your password:', font=("Helvetica", 14), bg='#ADD8E6').pack(side='left', padx=10)
         self.password = Entry(frame_3, width=60, borderwidth=2)
         self.password.pack(side='left', padx=10)
 
-        Label(frame_2, text='Select room:', font=("Helvetica", 14)).pack(side='left', padx=10)
+        Label(frame_2, text='Select room:', font=("Helvetica", 14), bg='#ADD8E6').pack(side='left', padx=10)
         self.room_var = StringVar()
         self.room_menu = ttk.Combobox(frame_2, textvariable=self.room_var, state='readonly')
         self.room_menu['values'] = ("Room 1", "Room 2", "Room 3")
         self.room_menu.set(" ")  # Default value
         self.room_menu.pack(side='left', padx=10)
 
-        Label(frame_4, text="Enter your room's password:", font=("Helvetica", 14)).pack(side='left', padx=10)
+        Label(frame_4, text="Enter your room's password:", font=("Helvetica", 14), bg='#ADD8E6').pack(side='left', padx=10)
         self.room_password = Entry(frame_4, width=60, borderwidth=2)
         self.room_password.pack(side='left', padx=10)
 
@@ -59,7 +68,7 @@ class LoginGUI:
         join_button.pack(side='left', padx=60)
 
         Label(frame_5, text="Register if you don't have access", font=("Helvetica", 10)).pack(side='top', padx=10)
-        join_button = Button(frame_5,text="Register", width=10, command=self.Register)
+        join_button = Button(frame_5,text="Register", width=15, command=self.Register)
         join_button.pack(side='left', padx=60)
 
         self.display_logo()
