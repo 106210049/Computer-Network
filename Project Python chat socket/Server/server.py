@@ -6,7 +6,6 @@ from datetime import datetime
 from PIL import Image, ImageTk
 import cv2
 import numpy as np
-
 class ChatServer:
     def __init__(self, gui):
         self.server_socket = None
@@ -96,6 +95,28 @@ class ChatServer:
             except:
                 self.remove_from_clients_list(client_socket, room_name)
 
+    def on_close_window(self):
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            # Notify all clients that the server is closing
+            for room_name, clients in self.rooms.items():
+                for client_socket in clients:
+                    try:
+                        client_socket.sendall("Server is closing".encode('utf-8'))
+                        client_socket.close()
+                    except Exception as e:
+                        print(f"Error sending close message to client: {e}")
+
+            # Close the server socket
+            if self.server_socket:
+                try:
+                    self.server_socket.close()
+                except Exception as e:
+                    print(f"Error closing server socket: {e}")
+
+            # Destroy the GUI root window
+            self.gui.root.destroy()
+            exit(0)
+
 class ServerGUI:
     def __init__(self, master):
         self.root = master
@@ -170,8 +191,10 @@ class ServerGUI:
                 self.room_list.insert(END, f"  Client {i}: {client.getpeername()}\n")
         self.room_list.yview(END)
 
+
 if __name__ == "__main__":
     root = Tk()
     gui = ServerGUI(root)
     server = ChatServer(gui)
+    root.protocol("WM_DELETE_WINDOW", server.on_close_window)
     root.mainloop()

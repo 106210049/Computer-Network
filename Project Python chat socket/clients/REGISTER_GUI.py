@@ -66,9 +66,13 @@ class LoginGUI:
         join_button = Button(frame_2,text="Join", width=10, command=self.on_join)
         join_button.pack(side='left', padx=60)
 
+        
+        # join_button = Button(frame_2,text="Join", width=10, command=self.on_join)
+        # join_button.pack(side='left', padx=60)
+
         Label(frame_5, text="Register if you don't have access", font=("Helvetica", 10)).pack(side='top', padx=10)
-        join_button = Button(frame_5,text="Register", width=15, command=self.Register)
-        join_button.pack(side='left', padx=60)
+        register_button = Button(frame_5,text="Register", width=15, command=self.Register)
+        register_button.pack(side='left', padx=60)
 
         self.display_logo()
 
@@ -137,7 +141,13 @@ class LoginGUI:
         chat_gui = GUI(chat_window, full_name, room_name)
         chat_window.protocol("WM_DELETE_WINDOW", chat_gui.on_close_window)
         chat_window.mainloop()
-    
+        
+    def Register(self):
+        self.root.destroy()
+        register_window = Tk()
+        register_gui = REGISTER_GUI(register_window)
+        register_window.protocol("WM_DELETE_WINDOW")
+        register_window.mainloop()
 class REGISTER_GUI:
     def __init__(self, master):
         self.root = master
@@ -228,6 +238,7 @@ class REGISTER_GUI:
     def Register_Success(self):
         full_name = self.name_entry.get().strip()
         private_password=self.password.get()
+        room=self.room_menu.get()
         room_pass=self.room_password.get()
         if len(full_name) == 0:
             messagebox.showerror("Enter your name", "Please enter your full name.")
@@ -235,7 +246,9 @@ class REGISTER_GUI:
         if len(private_password) == 0:
             messagebox.showerror("Enter your password", "Please enter your password.")
             return
-        
+        if len(room)==0:
+            messagebox.showerror("Choose your room", "Please Choose your room.")
+            return
         if len(room_pass) == 0:
             messagebox.showerror("Enter your room's password", "Please enter your room's password.")
             return
