@@ -1,15 +1,22 @@
+'''
+Note:
+    # Fix server video call here            
+
+'''
 import socket
 import threading
 from tkinter import Tk, Frame, Scrollbar, Label, END, Entry, Text, VERTICAL, Button, StringVar, messagebox
 from tkinter import ttk
 from datetime import datetime
 from PIL import Image, ImageTk
+from vidstream import StreamingServer
 import cv2
 import numpy as np
 class ChatServer:
     def __init__(self, gui):
         self.server_socket = None
         self.rooms = {}  # Dictionary to store chat rooms
+        self.video_call_servers = {}  # Dictionary to store video call servers per room
         self.gui = gui
         self.create_listening_server()
 
@@ -35,6 +42,8 @@ class ChatServer:
                 if message.startswith("left:"):
                     self.remove_from_clients_list(client_socket, room_name)
                     break
+                elif message.startswith("video_call:"):
+                    self.start_video_call_server(room_name)
                 else:
                     self.broadcast_to_room(message, room_name, client_socket)
                 print(message)
@@ -95,6 +104,15 @@ class ChatServer:
             except:
                 self.remove_from_clients_list(client_socket, room_name)
 
+    # Fix server video call here            
+    def start_video_call_server(self, room_name):
+        if room_name not in self.video_call_servers:
+            video_port = 10320 + len(self.video_call_servers)
+            video_call_server = StreamingServer('127.0.0.1', video_port)
+            video_call_server.start_server(3)
+            self.video_call_servers[room_name] = video_call_server
+            self.broadcast_to_room(f"video_call_started:{video_port}", room_name, None)
+
     def on_close_window(self):
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
             # Notify all clients that the server is closing
@@ -121,13 +139,13 @@ class ServerGUI:
     def __init__(self, master):
         self.root = master
         self.root.title("Chat Server")
-        self.root.geometry("600x400")
+        self.root.geometry("700x500")
         self.root.resizable(0, 0)
         self.initialize_gui()
 
     def initialize_gui(self):
         self.bg_image = Image.open("background2.png")
-        self.bg_image = self.bg_image.resize((600, 600))
+        self.bg_image = self.bg_image.resize((800, 800))
         self.bg_photo = ImageTk.PhotoImage(self.bg_image)
 
         self.bg_label = Label(self.root, image=self.bg_photo)
@@ -161,7 +179,7 @@ class ServerGUI:
 
             logo_label_bk = Label(self.root, image=logo_photo_bk)
             logo_label_bk.image = logo_photo_bk  # Keep a reference to the image to prevent garbage collection
-            logo_label_bk.place(x=200, y=320)
+            logo_label_bk.place(x=250, y=400)
 
             # Load and display 123.ico on the right
             logo_image_123 = Image.open("123.ico")
@@ -170,7 +188,7 @@ class ServerGUI:
 
             logo_label_123 = Label(self.root, image=logo_photo_123)
             logo_label_123.image = logo_photo_123  # Keep a reference to the image to prevent garbage collection
-            logo_label_123.place(x=320, y=320)
+            logo_label_123.place(x=380, y=400)
 
         except Exception as e:
             messagebox.showerror("Error", f"Unable to load logo image: {e}")
