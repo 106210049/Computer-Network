@@ -5,10 +5,13 @@ from REGISTER_GUI import REGISTER_GUI
 from PIL import Image, ImageTk
 import cv2
 import numpy as np
+import json
+from pymongo import MongoClient
 
 ROOM_PASSWORD_1='1234'
 ROOM_PASSWORD_2='7890'
 ROOM_PASSWORD_3='7749'
+MONGO_URI = "mongodb://localhost:27017/"
 
 class LoginGUI:
     def __init__(self, master):
@@ -17,7 +20,11 @@ class LoginGUI:
         self.root.resizable(0,0)
         self.root.geometry("600x450")
         self.root.iconbitmap('123.ico')
+        self.mongo_client = MongoClient(MONGO_URI)
+        self.db = self.mongo_client["chat_db"]
+        self.user_collection = self.db["user"]
         # self.resizable(width=False, height=False)
+        
         self.initialize_login_gui()
 
     def initialize_login_gui(self):
@@ -70,7 +77,6 @@ class LoginGUI:
         Label(frame_5, text="Register if you don't have access", font=("Helvetica", 10)).pack(side='top', padx=10)
         register_button = Button(frame_5,text="Register", width=15, command=self.Register)
         register_button.pack(side='left', padx=60)
-
         self.display_logo()
 
     def display_logo(self):
@@ -119,23 +125,22 @@ class LoginGUI:
             messagebox.showerror("Enter your room's password", "Please enter your room's password.")
             return
         
-        if room_name=='Room 1':
-            if(room_pass!=ROOM_PASSWORD_1):
-                messagebox.showerror("Wrong password", "Please enter room's password again.")
+        user=self.user_collection.find_one({"user_name":full_name},{"user_name":1})
+        user_name=f"{user['user_name']}"
+        
+        if(full_name==user_name):
+            user=self.user_collection.find_one({"user_name":full_name},{"user_password":1})
+            user_password=f"{user['user_password']}"
+            if(user_password==private_password):
+                print("OK")
+                self.root.destroy()
+                chat_window = Tk()
+                chat_gui = GUI(chat_window, full_name, room_name)
+                chat_window.protocol("WM_DELETE_WINDOW", chat_gui.on_close_window)
+                chat_window.mainloop()
+            else:
+                messagebox.showerror("Wrong password", "Please enter your password again.")
                 return
-        elif room_name=='Room 2':
-            if(room_pass!=ROOM_PASSWORD_2):
-                messagebox.showerror("Wrong password", "Please enter room's password again.")
-                return
-        else:
-            if(room_pass!=ROOM_PASSWORD_3):
-                messagebox.showerror("Wrong password", "Please enter room's password again.")
-                return
-        self.root.destroy()
-        chat_window = Tk()
-        chat_gui = GUI(chat_window, full_name, room_name)
-        chat_window.protocol("WM_DELETE_WINDOW", chat_gui.on_close_window)
-        chat_window.mainloop()
 
     def Register(self):
         self.root.destroy()
