@@ -2,6 +2,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <string>
+#include <algorithm> // Thêm thư viện này cho std::replace
 // g++ socket_tcp_server.cpp -o socket_tcp_server.exe -lws2_32
 // ./socket_tcp_server.exe
 using namespace std;
@@ -12,6 +13,7 @@ using namespace std;
 
 #pragma comment(lib, "Ws2_32.lib")
 // winsock->set up socket (socket)->bind()->listen()->accept()
+
 int main()
 {
     cout << "====== Set up Winsock ======" << endl;
@@ -45,8 +47,7 @@ int main()
     tcpServerAddr.sin_port = htons(SERVER_PORT);
     tcpServerAddr.sin_addr.s_addr = inet_addr(SERVER_ADDR);
     cout << "====== Bind API ======" << endl;
-    if (bind(listenSock, (sockaddr *)&tcpServerAddr, sizeof(tcpServerAddr)) ==
-        SOCKET_ERROR)
+    if (bind(listenSock, (sockaddr *)&tcpServerAddr, sizeof(tcpServerAddr)) == SOCKET_ERROR)
     {
         cout << "Bind API failed with code " << WSAGetLastError() << endl;
         closesocket(listenSock); // Clean up before returning
@@ -63,13 +64,12 @@ int main()
         return 1;
     }
     cout << "Successfully!!! Server is listening for requests..." << endl;
-    cout < "========== Accept ==========" << endl;
+    cout << "========== Accept ==========" << endl;
     sockaddr_in clientAddr;
     char buff[BUFF_MAXSIZE], clientIP[INET_ADDRSTRLEN];
     int ret, clientAddrLen = sizeof(clientAddr), clientPort;
 
-    SOCKET NewConnection = accept(listenSock, (sockaddr *)&clientAddr,
-                                  &clientAddrLen);
+    SOCKET NewConnection = accept(listenSock, (sockaddr *)&clientAddr, &clientAddrLen);
     if (NewConnection == INVALID_SOCKET)
     {
         cout << "Connection failed with code: " << WSAGetLastError() << endl;
@@ -96,18 +96,41 @@ int main()
         }
         else
         {
-            buff[ret] = '\0'; // Null-terminate the received data
+            buff[ret] = '\0'; // Kết thúc chuỗi nhận được bằng null-terminate
+
             cout << "Received message from client " << clientIP << ":" << clientPort
                  << ": " << buff << endl;
-            // string buffStr(buff);
-            // buffStr = process(buffStr);
+
+            // Kiểm tra nếu nhận được lệnh "exit"
             if (strcmp(buff, "exit") == 0)
             {
                 cout << "Received exit command from client. Closing connection..." << endl;
                 const char *exitMessage = "exit";
                 send(NewConnection, exitMessage, strlen(exitMessage), 0);
-                break; // Exit the loop to close connection
+                break; // Thoát vòng lặp để đóng kết nối
             }
+            for (int i = 0; i < sizeof(buff) / sizeof(buff[0]); i++)
+            {
+                // if (buff[i] >= 'a' && buff[i] <= 'z')
+                // {
+                //     buff[i] = buff[i] - ('a' - 'A');
+                // }
+                if (buff[i] >= 'A' && buff[i] <= 'Z')
+                {
+                    buff[i] = buff[i] - ('A' - 'a');
+                }
+            }
+            // Convert buff to std::string to replace spaces with '_'
+            std::string message(buff);
+
+            // Replace spaces with underscores
+            std::replace(message.begin(), message.end(), ' ', '_');
+
+            // Copy modified message back to buff
+            strncpy(buff, message.c_str(), BUFF_MAXSIZE - 1);
+            buff[BUFF_MAXSIZE - 1] = '\0'; // Ensure null-terminated string
+
+            // Gửi lại chuỗi đã được xử lý cho client
             ret = send(NewConnection, buff, strlen(buff), 0);
             if (ret == SOCKET_ERROR)
             {
