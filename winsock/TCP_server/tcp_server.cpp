@@ -4,9 +4,10 @@
 #include <string>
 #include <thread> // For multithreading
 #include <vector>
-
+#include "algorithm"
 #pragma comment(lib, "Ws2_32.lib")
-
+// g++ tcp_server.cpp -o tcp_server.exe -lws2_32
+// ./tcp_server.exe
 #define SERVER_PORT 5500
 #define SERVER_ADDR "127.0.0.1"
 #define BUFF_MAXSIZE 1024
@@ -56,6 +57,27 @@ void handleClient(SOCKET clientSocket, sockaddr_in clientAddr)
         {
             buff[0] = buff[0] - ('a' - 'A');
         }
+
+        for (int i = 0; i < sizeof(buff) / sizeof(buff[0]); i++)
+        {
+            // if (buff[i] >= 'a' && buff[i] <= 'z')
+            // {
+            //     buff[i] = buff[i] - ('a' - 'A');
+            // }
+            if (buff[i] >= 'A' && buff[i] <= 'Z')
+            {
+                buff[i] = buff[i] - ('A' - 'a');
+            }
+        }
+        // Convert buff to std::string to replace spaces with '_'
+        std::string message(buff);
+
+        // Replace spaces with underscores
+        std::replace(message.begin(), message.end(), ' ', '_');
+
+        // Copy modified message back to buff
+        strncpy(buff, message.c_str(), BUFF_MAXSIZE - 1);
+        buff[BUFF_MAXSIZE - 1] = '\0'; // Ensure null-terminated string
 
         // Send modified data back to the client
         ret = send(clientSocket, buff, strlen(buff), 0);

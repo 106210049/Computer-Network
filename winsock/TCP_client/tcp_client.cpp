@@ -2,8 +2,8 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <string>
-// g++ socket_tcp_client.cpp -o socket_tcp_client.exe -lws2_32
-//  .\socket_tcp_client.exe
+// g++ tcp_client.cpp -o tcp_client.exe -lws2_32
+//  .\tcp_client.exe
 #pragma comment(lib, "Ws2_32.lib")
 
 #define SERVER_PORT 5500
