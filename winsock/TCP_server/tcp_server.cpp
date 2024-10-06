@@ -61,6 +61,7 @@ void handleClient(SOCKET clientSocket, sockaddr_in clientAddr)
         //     {
         //         buff[i] = buff[i] - ('a' - 'A');
         //     }
+        // Lowlize all charactor if it's upcase
         //     // if (buff[i] >= 'A' && buff[i] <= 'Z')
         //     // {
         //     //     buff[i] = buff[i] - ('A' - 'a');
@@ -69,7 +70,9 @@ void handleClient(SOCKET clientSocket, sockaddr_in clientAddr)
         // Convert buff to std::string to replace spaces with '_'
         std::string message(buff);
         // Replace spaces with underscores
-        std::replace(message.begin(), message.end(), ' ', '_');
+        std::replace(message.begin(), message.end(), '_', ' ');
+        // Remove '_' in message
+        // message.erase(remove(message.begin(), message.end(), '_'), message.end());
         // Copy modified message back to buff
         strncpy(buff, message.c_str(), BUFF_MAXSIZE - 1);
         buff[BUFF_MAXSIZE - 1] = '\0'; // Ensure null-terminated string
