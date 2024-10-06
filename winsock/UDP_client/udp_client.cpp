@@ -1,6 +1,6 @@
 
-//  g++ .\udp_client.cpp -o udp_client.exe -lws2_32
-//  .\udp_client.exe 127.0.0.1 8080 quora.com
+//  g++ udp_client.cpp -o udp_client.exe -lws2_32
+// ./udp_client.exe 127.0.0.1 8080 quora.com
 // ./udp_client.exe 127.0.0.1 8080 www.google.com
 // ./udp_client.exe 127.0.0.1 8080 sv.dut.udn.vn
 // ./udp_client.exe 127.0.0.1 8080 www.youtube.com
@@ -26,7 +26,7 @@ int main(int argc, char **argv)
     const char *serverIP = argv[1];
     int portNumber = atoi(argv[2]);
     const char *domainName = argv[3];
-
+    cout << "Server IP: " << argv[1] << " Port number: " << argv[2] << " domain number: " << argv[3] << endl;
     WSADATA wsaData;
     WORD wVersion = MAKEWORD(2, 2);
     if (WSAStartup(wVersion, &wsaData) != 0)

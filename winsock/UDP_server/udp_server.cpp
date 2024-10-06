@@ -1,6 +1,5 @@
-// cd UDP
 // g++ udp_server.cpp -o udp_server.exe -lws2_32
-// .\UDPServer.exe 8080
+// .\udp_server.exe 8080
 
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -58,7 +57,7 @@ int main(int argc, char **argv)
     {
         cout << "Server startup complete!" << endl;
     }
-
+    cout << "========== Create Socket ==========" << endl;
     SOCKET serverSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (serverSocket == INVALID_SOCKET)
     {
@@ -66,12 +65,12 @@ int main(int argc, char **argv)
         WSACleanup();
         return 1;
     }
-
+    cout << "Create socket susscessful" << endl;
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = inet_addr(SERVER_ADDR);
     serverAddr.sin_port = htons(portNumber);
-
+    cout << "========== BIND API ==========" << endl;
     if (bind(serverSocket, (sockaddr *)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
     {
         cout << "Binding socket failed with code: " << WSAGetLastError() << endl;
@@ -84,7 +83,7 @@ int main(int argc, char **argv)
     int clientAddrLen = sizeof(clientAddr);
     char buffer[BUFFER_SIZE];
     int ret;
-
+    cout << "========== Recieve data ==========" << endl;
     while (true)
     {
         ret = recvfrom(serverSocket, buffer, BUFFER_SIZE, 0, (sockaddr *)&clientAddr, &clientAddrLen);

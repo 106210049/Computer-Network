@@ -2,7 +2,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <string>
-#include <thread> // For multithreading
+#include <thread>
 #include <vector>
 #include "algorithm"
 #pragma comment(lib, "Ws2_32.lib")
@@ -13,22 +13,20 @@
 #define BUFF_MAXSIZE 1024
 
 using namespace std;
-
-// Function to handle each client in a separate thread
 void handleClient(SOCKET clientSocket, sockaddr_in clientAddr)
 {
     char buff[BUFF_MAXSIZE], clientIP[INET_ADDRSTRLEN];
     int ret, clientPort;
 
-    // Convert client's IP address and port
+    // convert Client's IP address and port
     inet_ntop(AF_INET, &clientAddr.sin_addr, clientIP, sizeof(clientIP));
     clientPort = ntohs(clientAddr.sin_port);
-    cout << "New connection established with client: " << clientIP << ":" << clientPort << endl;
-
+    cout << "New connection established with client: " << clientIP << " : " << clientPort << endl;
     while (true)
     {
-        // Receive data from client
+        // recieve data from client
         ret = recv(clientSocket, buff, BUFF_MAXSIZE, 0);
+        cout << "ret: " << ret << endl;
         if (ret == SOCKET_ERROR)
         {
             cout << "Error in receiving from client: " << WSAGetLastError() << endl;
@@ -36,15 +34,14 @@ void handleClient(SOCKET clientSocket, sockaddr_in clientAddr)
         }
         if (ret == 0)
         {
-            cout << "Client " << clientIP << ":" << clientPort << " disconnected." << endl;
+            cout << "Client " << clientIP << " : " << clientPort << "disconnected" << endl;
             break;
         }
+        buff[ret] = '\0'; // Null-terminate the recieved data
+        cout << "Recieved from client " << clientIP << " : " << clientPort << " : " << buff << endl;
 
-        buff[ret] = '\0'; // Null-terminate the received data
-        cout << "Received from client " << clientIP << ":" << clientPort << ": " << buff << endl;
-
-        // Check for 'exit' command from the client
-        if (strcmp(buff, "exit") == 0)
+        // Check for "exit" command from client
+        if (strcmp(buff, "ext") == 0)
         {
             cout << "Received exit command from client " << clientIP << ":" << clientPort << endl;
             const char *exitMessage = "exit";
@@ -52,29 +49,27 @@ void handleClient(SOCKET clientSocket, sockaddr_in clientAddr)
             break;
         }
 
-        // Capitalize the first character if it's lowercase
+        // Capitalize the first character if it's lowcase
         if (buff[0] >= 'a' && buff[0] <= 'z')
         {
             buff[0] = buff[0] - ('a' - 'A');
         }
-
-        for (int i = 0; i < sizeof(buff) / sizeof(buff[0]); i++)
-        {
-            // if (buff[i] >= 'a' && buff[i] <= 'z')
-            // {
-            //     buff[i] = buff[i] - ('a' - 'A');
-            // }
-            if (buff[i] >= 'A' && buff[i] <= 'Z')
-            {
-                buff[i] = buff[i] - ('A' - 'a');
-            }
-        }
+        //   Capitalize all characters if it's lowcase
+        // for (int i = 0; i < sizeof(buff) / sizeof(buff[0]); i++)
+        // {
+        //     if (buff[i] >= 'a' && buff[i] <= 'z')
+        //     {
+        //         buff[i] = buff[i] - ('a' - 'A');
+        //     }
+        //     // if (buff[i] >= 'A' && buff[i] <= 'Z')
+        //     // {
+        //     //     buff[i] = buff[i] - ('A' - 'a');
+        //     // }
+        // }
         // Convert buff to std::string to replace spaces with '_'
         std::string message(buff);
-
         // Replace spaces with underscores
         std::replace(message.begin(), message.end(), ' ', '_');
-
         // Copy modified message back to buff
         strncpy(buff, message.c_str(), BUFF_MAXSIZE - 1);
         buff[BUFF_MAXSIZE - 1] = '\0'; // Ensure null-terminated string
@@ -87,13 +82,11 @@ void handleClient(SOCKET clientSocket, sockaddr_in clientAddr)
             break;
         }
     }
-
     // Shutdown and close client socket
     shutdown(clientSocket, SD_BOTH);
     closesocket(clientSocket);
     cout << "Connection with client " << clientIP << ":" << clientPort << " closed." << endl;
 }
-
 int main()
 {
     cout << "====== Set up Winsock ======" << endl;
@@ -117,13 +110,10 @@ int main()
         return 1;
     }
     cout << "Socket created successfully." << endl;
-
-    // Server address setup
     sockaddr_in tcpServerAddr;
     tcpServerAddr.sin_family = AF_INET;
     tcpServerAddr.sin_port = htons(SERVER_PORT);
     tcpServerAddr.sin_addr.s_addr = inet_addr(SERVER_ADDR);
-
     cout << "====== Bind API ======" << endl;
     if (bind(listenSock, (sockaddr *)&tcpServerAddr, sizeof(tcpServerAddr)) == SOCKET_ERROR)
     {
@@ -145,7 +135,6 @@ int main()
     cout << "Server is listening for connections..." << endl;
 
     vector<thread> clientThreads; // Vector to hold client threads
-
     while (true)
     {
         sockaddr_in clientAddr;
@@ -158,14 +147,12 @@ int main()
             WSACleanup();
             return 1;
         }
-
         // Start a new thread to handle the client
         clientThreads.push_back(thread(handleClient, clientSock, clientAddr));
 
         // Detach the thread to let it run independently
         clientThreads.back().detach();
     }
-
     // Clean up
     closesocket(listenSock);
     WSACleanup();
