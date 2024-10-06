@@ -48,7 +48,7 @@ int main()
     while (true)
     {
         string message;
-        cout << "Enter message: ";
+        cout << "Enter message to send (type 'exit' to quit): ";
         getline(cin, message);
         int byteSent = send(client, message.c_str(), message.length(), 0);
         if (byteSent == SOCKET_ERROR)
